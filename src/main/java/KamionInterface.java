@@ -1,2 +1,1 @@
-public interface KamionInterface {
-}
+public interface KamionInterface {}

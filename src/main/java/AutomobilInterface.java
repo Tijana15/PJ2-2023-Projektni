@@ -1,2 +1,1 @@
-public interface AutomobilInterface {
-}
+public interface AutomobilInterface { }

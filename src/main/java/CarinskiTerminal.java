@@ -1,62 +1,93 @@
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class CarinskiTerminal extends Terminal{
+public class CarinskiTerminal extends Terminal {
     @Override
-    public void obradaVozila(Vozilo vozilo)
-    {
-        if(vozilo instanceof AutomobilInterface) {
+    public void obradaVozila(Vozilo vozilo) {
+
+        String opisProb="";
+
+        if (vozilo instanceof AutomobilInterface) {
+
             try {
                 Thread.sleep(2000);
-            }catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
             }
-            //System.out.println("Auto "+vozilo+" proslo carinsku");
+
+            if (Simulacija.pauza) {
+                synchronized (Simulacija.lock) {
+                    try {
+                        Simulacija.lock.wait();
+                    } catch (InterruptedException e) {
+                        Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
+                    }
+                }
+            }
+
             vozilo.setPaoCarinski(false);
-        }
-        else if(vozilo instanceof AutobusInterface) {
-            if(vozilo.getPutnici().size()!=0) {
+
+        } else if (vozilo instanceof AutobusInterface) {
+            if (vozilo.getPutnici().size() != 0) {
                 for (int i = 0; i < vozilo.getPutnici().size(); i++) {
+
                     try {
                         Thread.sleep(100);
-                    }catch(InterruptedException e) {
+                    } catch (InterruptedException e) {
                         Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
+                    }
+
+                    if (Simulacija.pauza) {
+                        synchronized (Simulacija.lock) {
+                            try {
+                                Simulacija.lock.wait();
+                            } catch (InterruptedException e) {
+                                Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
+                            }
+                        }
                     }
                     if (vozilo.getPutnici().get(i).ImaLiKofer()) {
                         if (vozilo.getPutnici().get(i).getKofer().ImaLiNedozvoljeneStvari()) {
-                            //System.out.println("Putnik "+vozilo.getPutnici().get(i)+" ima nedozvoljene stvari u koferu. Ne moze preci granicu");
-                            //System.out.println("Uklanjanje "+vozilo.getPutnici().get(i)+" iz autobusa.");
+                            vozilo.setImaoCarinskiIncident(true);
+                            opisProb+="Putnik"+vozilo.getPutnici().get(i)+" imao nedozvoljene stvari u koferu.";
                             vozilo.ukloniPutnikaIzVozila(vozilo.getPutnici().get(i));
-                        }
-                        else {
-                            //System.out.println("Putnik " + vozilo.getPutnici().get(i) + " presao carinsku");
                         }
                     }
                 }
-            }
-            else {
+                if(vozilo.jeImaoCarinskiIncident()){
+                    Simulacija.serijalizujTekstualno(new Incident(vozilo.id ,opisProb));
+                }
+            } else {
                 System.out.println("Autobus je prazan. Prolazi carinsku kontrolu odmah.");
                 vozilo.setPaoCarinski(false);
             }
-        }
-        else if (vozilo instanceof KamionInterface) {
+        } else if (vozilo instanceof KamionInterface) {
+
             try {
                 Thread.sleep(500);
-            }catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
             }
-            Kamion kamion=(Kamion)vozilo;
-            if(kamion.daLiJePotrebnaCarinskaDokumentacija()) {
-                if(kamion.daLiKamionImaVeciTeret()) {
-                    System.out.println("Kamion "+kamion+" ne moze da predje carinsku kontrolu jer je preopterecen.");
-                    kamion.setPaoCarinski(true);
-                }
-                else {
-                    //System.out.println("Kamion "+kamion+" ima dozvoljen teret. Moze da predje carinsku.");
+
+            if (Simulacija.pauza) {
+                synchronized (Simulacija.lock) {
+                    try {
+                        Simulacija.lock.wait();
+                    } catch (InterruptedException e) {
+                        Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
+                    }
                 }
             }
-            else {
-                //System.out.println("Kamionu "+kamion+" nije  potrebna carinska dokumentacija. Prolazi carinsku kontrolu.");
+
+            Kamion kamion = (Kamion)vozilo;
+            if (kamion.daLiJePotrebnaCarinskaDokumentacija()) {
+                if (kamion.daLiKamionImaVeciTeret()) {
+                    kamion.setImaoCarinskiIncident(true);
+                    opisProb+="Preopterecen.";
+                    System.out.println("Kamion " + kamion + " ne moze da predje carinsku kontrolu jer je preopterecen.");
+                    Simulacija.serijalizujTekstualno(new Incident(kamion.id ,opisProb));
+                    kamion.setPaoCarinski(true);
+                }
             }
         }
     }

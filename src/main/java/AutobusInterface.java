@@ -1,2 +1,1 @@
-public interface AutobusInterface {
-}
+public interface AutobusInterface {}

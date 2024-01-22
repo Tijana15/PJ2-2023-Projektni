@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class TeretniProstor {
+public class TeretniProstor implements Serializable{
     private ArrayList<Kofer> koferi;
     public TeretniProstor()
     {

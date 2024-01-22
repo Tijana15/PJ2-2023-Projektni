@@ -1,4 +1,6 @@
-public class Osoba {
+import java.io.Serializable;
+
+public class Osoba implements Serializable {
     private IdentifikacioniDokument identifikacioniDokument;
     public Osoba()
     {
@@ -8,7 +10,6 @@ public class Osoba {
     public void setIdentifikacioniDokument(IdentifikacioniDokument identifikacioniDokument) {
         this.identifikacioniDokument = identifikacioniDokument;
     }
-
     public IdentifikacioniDokument getIdentifikacioniDokument() {
         return identifikacioniDokument;
     }

@@ -1,46 +1,76 @@
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-public class PolicijskiTerminal extends Terminal
-{
+public class PolicijskiTerminal extends Terminal {
     @Override
-    public void obradaVozila(Vozilo vozilo)
-    {
+    public void obradaVozila(Vozilo vozilo) {
+
+        String opisProb="";
         int vrijemeObradePutnika;
-        if(vozilo instanceof KamionInterface || vozilo instanceof AutomobilInterface) {
-            vrijemeObradePutnika=500;
+
+        if (vozilo instanceof KamionInterface || vozilo instanceof AutomobilInterface) {
+            vrijemeObradePutnika = 500;
+        } else {
+            vrijemeObradePutnika = 100;
         }
-        else {
-            vrijemeObradePutnika=100;
-        }
+
         try {
             Thread.sleep(vrijemeObradePutnika);
         } catch (InterruptedException e) {
             Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
         }
-        if(vozilo.getVozac().getIdentifikacioniDokument().jeIspravan()) {
-            //System.out.println(vozilo+" moze uspješno da prođe policijski terminal, id vozaca ispravan.");
+
+        if (Simulacija.pauza) {
+            synchronized (Simulacija.lock) {
+                try {
+                    Simulacija.lock.wait();
+                } catch (InterruptedException e) {
+                    Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
+                }
+            }
         }
-        else {
-            //System.out.println(vozilo+" ne moze preci granicu zbog neispravnosti dokumenta vozaca "+vozilo.getVozac());
+
+        if (vozilo.getVozac().getIdentifikacioniDokument().jeIspravan()) {
+            //System.out.println(vozilo+" moze uspješno da prođe policijski terminal, id vozaca ispravan.");
+        } else {
+
+            vozilo.setImaoPolicijskiIncident(true);
+            opisProb+="Vozac"+vozilo.getVozac()+" nije imao validan identifikacioni dokument.";
+            Simulacija.serijalizujBinarno(new Incident(vozilo.id,opisProb));
             vozilo.setPaoPolicijski(true);
             return;
         }
-        Iterator<Putnik> iterator=vozilo.getPutnici().iterator();
-        while(iterator.hasNext()) {
+
+        Iterator<Putnik> iterator = vozilo.getPutnici().iterator();
+
+        while (iterator.hasNext()) {
+
             try {
                 Thread.sleep(vrijemeObradePutnika);
             } catch (InterruptedException e) {
                 Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
             }
-            Putnik putnik=iterator.next();
-            if (!putnik.getIdentifikacioniDokument().jeIspravan()) {
-                //System.out.println("Putnik " + putnik.getIdentifikacioniDokument() + " ne moze preci granicu zbog neispravnosti identifikacionog dokumenta. Izbacuje se iz vozila.");
-                iterator.remove();
-            } else {
-                //System.out.println("Putnik " + putnik.getIdentifikacioniDokument() + " prosao policijsku provjeru.");
+
+            if (Simulacija.pauza) {
+                synchronized (Simulacija.lock) {
+                    try {
+                        Simulacija.lock.wait();
+                    } catch (InterruptedException e) {
+                        Logger.getLogger(Simulacija.class.getName()).log(Level.WARNING, e.fillInStackTrace().toString());
+                    }
+                }
             }
+
+            Putnik putnik = iterator.next();
+
+            if (!putnik.getIdentifikacioniDokument().jeIspravan()) {
+                vozilo.setImaoPolicijskiIncident(true);
+                opisProb+="Putnik"+putnik.getIdentifikacioniDokument()+" nije imao validan identifikacioni dokument.";
+                iterator.remove(); //izbacuje se iz vozila ako nema validan id
+            }
+        }
+        if(vozilo.jeImaoPolicijskiIncident()){
+            Simulacija.serijalizujBinarno(new Incident(vozilo.id,opisProb));
         }
     }
 }

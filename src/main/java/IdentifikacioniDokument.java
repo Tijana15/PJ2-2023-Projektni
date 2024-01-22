@@ -1,5 +1,6 @@
+import java.io.Serializable;
 import java.util.Random;
-public class IdentifikacioniDokument {
+public class IdentifikacioniDokument implements Serializable{
     private  boolean ispravan;
     private int broj;
     private static int brojac=0;
@@ -8,7 +9,6 @@ public class IdentifikacioniDokument {
         this.ispravan=new Random().nextInt(100)<97;
         brojac++;
         broj=brojac;
-
     }
     public boolean jeIspravan() {
         return ispravan;

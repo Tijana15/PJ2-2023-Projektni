@@ -1,13 +1,12 @@
 import java.util.Random;
-
-public class Putnik extends Osoba{
+public class Putnik extends Osoba {
     Kofer kofer;
     private boolean imaKofer;
     public Putnik()
     {
         super();
         imaKofer=new Random().nextInt(100)<70;
-        if(imaKofer) {
+        if(imaKofer){
             kofer = new Kofer();
         }
     }
@@ -20,6 +19,6 @@ public class Putnik extends Osoba{
     @Override
     public String toString()
     {
-        return "Putnik"+getIdentifikacioniDokument();
+        return ""+getIdentifikacioniDokument();
     }
 }
